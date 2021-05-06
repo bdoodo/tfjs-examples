@@ -75,6 +75,40 @@ export async function plotROC(fprs, tprs, epoch) {
       {
         width: 450,
         height: 320,
+        xLabel: 'FPR',
+        yLabel: 'TPR'
       },
   );
+}
+
+const psnVsRclValues = []
+const psnVsRclSeries = []
+
+export async function plotPsnVsRcl(psn, rcl, epoch) {
+  epoch++;  // Convert zero-based to one-based.
+
+  // Store the series name in the list of series
+  const seriesName = 'epoch ' +
+      (epoch < 10 ? `00${epoch}` : (epoch < 100 ? `0${epoch}` : `${epoch}`))
+  psnVsRclSeries.push(seriesName);
+
+  const newSeries = [];
+  for (let i = 0; i < psn.length; i++) {
+    newSeries.push({
+      x: rcl[i],
+      y: psn[i],
+    });
+  }
+  psnVsRclValues.push(newSeries);
+
+  return tfvis.render.linechart(
+    document.getElementById('plotPsnVsRcl'),
+    {values: psnVsRclValues, series: psnVsRclSeries},
+    {
+      width: 450,
+      height: 320,
+      xLabel: 'Recall',
+      yLabel: 'Precision'
+    },
+);
 }

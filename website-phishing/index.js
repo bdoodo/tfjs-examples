@@ -31,6 +31,15 @@ function falsePositives(yTrue, yPred) {
   });
 }
 
+function truePositives(yTrue, yPred) {
+  return tf.tidy(() => {
+    const one = tf.scalar(1)
+    return tf.logicalAnd(yTrue.equal(one), yPred.equal(one))
+        .sum()
+        .cast('float32')
+  })
+}
+
 function trueNegatives(yTrue, yPred) {
   return tf.tidy(() => {
     const zero = tf.scalar(0);
@@ -38,6 +47,14 @@ function trueNegatives(yTrue, yPred) {
         .sum()
         .cast('float32');
   });
+}
+
+function precision(yTrue, yPred) {
+  return tf.tidy(() => {
+    const tp = truePositives(yTrue, yPred)
+    const fp = falsePositives(yTrue, yPred)
+    return tp.div(tp.add(fp))
+  })
 }
 
 // TODO(cais): Use tf.metrics.falsePositiveRate when available.
@@ -89,8 +106,30 @@ function drawROC(targets, probs, epoch) {
   });
 }
 
+function drawPrecisionRecallCurve(targets, probs, epoch){
+  return tf.tidy(() => {
+    const thresholds = [
+      0.0, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4,  0.45, 0.5,  0.55,
+      0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.92, 0.94, 0.96, 0.98, 1.0
+    ];
+    const psns = []
+    const rcls = []
+    for (let i = 0; i < thresholds.length; ++i) {
+      const threshold = thresholds[i]
+
+      const threshPredictions = utils.binarize(probs, threshold).as1D()
+      const psn = precision(targets, threshPredictions).dataSync()[0]
+      const rcl = precision(targets, threshPredictions).dataSync()[0]
+      psns.push(psn)
+      rcls.push(rcl)
+    }
+    ui.plotPsnVsRcl(psns, rcls, epoch)
+    return
+  })
+}
+
 // Some hyperparameters for model training.
-const epochs = 400;
+const epochs = 200;
 const batchSize = 350;
 
 const data = new WebsitePhishingDataset();
@@ -123,6 +162,7 @@ data.loadData().then(async () => {
             epoch === 4) {
           const probs = model.predict(testData.data);
           auc = drawROC(testData.target, probs, epoch);
+          drawPrecisionRecallCurve(testData.target, probs, epoch)
         }
       },
       onEpochEnd: async (epoch, logs) => {
