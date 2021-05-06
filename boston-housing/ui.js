@@ -45,7 +45,7 @@ export function updateWeightDescription(weightsList) {
   inspectionHeadlineElement.innerText =
       `Top ${NUM_TOP_WEIGHTS_TO_DISPLAY} weights by magnitude`;
   // Sort weights objects by descending absolute value.
-  weightsList.sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  weightsList.sort((b, a) => Math.abs(b.value) - Math.abs(a.value));
   var table = document.getElementById('myTable');
   // Clear out table contents
   table.innerHTML = '';

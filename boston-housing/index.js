@@ -96,6 +96,7 @@ export function multiLayerPerceptronRegressionModel2Hidden() {
   }));
   model.add(tf.layers.dense(
       {units: 50, activation: 'sigmoid', kernelInitializer: 'leCunNormal'}));
+  model.add(tf.layers.dense({units: 10, activation: 'sigmoid', kernelInitializer: 'leCunNormal'}));
   model.add(tf.layers.dense({units: 1}));
 
   model.summary();
